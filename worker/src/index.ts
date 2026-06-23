@@ -64,8 +64,8 @@ export default {
       return Response.json({ success: true }, { headers: corsHeaders });
     }
 
-    // --- EVENTS API ---
-    if (path === '/api/events') {
+    // --- SCHEDULE API (to avoid adblockers blocking /events) ---
+    if (path === '/api/schedule') {
       if (request.method === 'GET') {
         const { results } = await env.DB.prepare('SELECT * FROM events ORDER BY event_date ASC').all();
         return Response.json(results, { headers: corsHeaders });
@@ -84,13 +84,13 @@ export default {
       }
     }
 
-    if (path.startsWith('/api/events/') && request.method === 'DELETE') {
+    if (path.startsWith('/api/schedule/') && request.method === 'DELETE') {
       const id = path.split('/').pop();
       await env.DB.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
       return Response.json({ success: true }, { headers: corsHeaders });
     }
 
-    if (path.startsWith('/api/events/') && request.method === 'PUT') {
+    if (path.startsWith('/api/schedule/') && request.method === 'PUT') {
       const id = path.split('/').pop();
       const body: any = await request.json();
       if (!body.title || !body.event_date || !body.type) {
