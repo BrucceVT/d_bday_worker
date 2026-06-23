@@ -111,11 +111,29 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
 
   return (
     <div className="calendar-view full-page-calendar card">
-      <div className="calendar-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="calendar-header" style={{ flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button onClick={prevMonth} className="btn-icon"><ChevronLeft size={20}/></button>
-          <h3 style={{ margin: 0, minWidth: '180px', textAlign: 'center' }}>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
+          <h3 style={{ margin: 0, width: '220px', textAlign: 'center' }}>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
           <button onClick={nextMonth} className="btn-icon"><ChevronRight size={20}/></button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <select 
+            value={currentDate.getMonth()} 
+            onChange={(e) => setCurrentDate(new Date(currentDate.getFullYear(), parseInt(e.target.value), 1))}
+            className="input-field"
+            style={{ padding: '0.5rem', minWidth: '130px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)' }}
+          >
+            {MONTH_NAMES.map((m, i) => <option key={i} value={i} style={{ color: 'black' }}>{m}</option>)}
+          </select>
+          <input 
+            type="number" 
+            value={currentDate.getFullYear()} 
+            onChange={(e) => setCurrentDate(new Date(parseInt(e.target.value), currentDate.getMonth(), 1))}
+            className="input-field"
+            style={{ padding: '0.5rem', width: '90px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)' }}
+          />
         </div>
         
         <div className="search-box" style={{ position: 'relative', minWidth: '250px' }}>
@@ -157,10 +175,12 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
             return { ...ev, isHighlighted: isH };
           });
           
+          const isToday = day && day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+          
           return (
             <div 
               key={idx} 
-              className={`day-cell ${!day ? 'empty' : ''}`}
+              className={`calendar-cell ${!day ? 'empty' : ''} ${isToday ? 'today' : ''}`}
               style={cellHasHighlight ? { 
                 backgroundColor: 'rgba(139, 92, 246, 0.15)', 
                 borderColor: 'var(--primary)', 
