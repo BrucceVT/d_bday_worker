@@ -1,0 +1,21 @@
+name = "celebrabot-worker"
+main = "src/index.ts"
+compatibility_date = "2024-04-05"
+
+# Usaremos un Webhook de Discord por su simplicidad (no requiere un bot en línea constantemente)
+# Para configurarlo, crea un archivo .dev.vars con DISCORD_WEBHOOK_URL="tu_url_aqui"
+# y luego en producción ejecuta: wrangler secret put DISCORD_WEBHOOK_URL
+
+[vars]
+# Aquí podríamos colocar la URL del webhook si fuera pública, pero es mejor como secreto.
+# FRONTEND_URL sirve para el CORS (ajustar en producción)
+FRONTEND_URL = "*"
+
+[[d1_databases]]
+binding = "DB" # Nombre de la variable en TypeScript (env.DB)
+database_name = "celebrabot-db"
+database_id = "87cdb935-b847-4558-97b0-e2c5820d7145"
+
+[triggers]
+# Ejecutar todos los días a las 13:00 UTC (08:00 AM Perú)
+crons = ["0 13 * * *"]
