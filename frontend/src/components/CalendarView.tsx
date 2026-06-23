@@ -117,16 +117,25 @@ export function CalendarView({ birthdays, onEditBirthday }: CalendarViewProps) {
               {day && <span className="day-number">{day}</span>}
               {day && bdays.length > 0 && (
                 <div className="bday-pills">
-                  {bdays.map(bday => (
-                    <div key={bday.id} className="bday-pill" onClick={() => onEditBirthday(bday)} title="Editar">
-                      {bday.image_url ? (
-                        <img src={bday.image_url} alt={bday.name} className="pill-avatar" />
-                      ) : (
-                        <div className="pill-avatar text-avatar">{bday.name.charAt(0).toUpperCase()}</div>
-                      )}
-                      <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
-                    </div>
-                  ))}
+                  {bdays.map(bday => {
+                    const isHighlighted = searchTerm.trim().length > 1 && (
+                      bday.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                      (bday.nickname && bday.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
+                    );
+
+                    return (
+                      <div 
+                        key={bday.id} 
+                        className={`bday-pill ${isHighlighted ? 'highlight-pulse' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); onEditBirthday(bday); }}
+                        title={bday.custom_message || ''}
+                        style={isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {}}
+                      >
+                        <span className="pill-dot"></span>
+                        <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
