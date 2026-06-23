@@ -32,7 +32,7 @@ function App() {
     try {
       const [resBdays, resEvents] = await Promise.all([
         fetch(`${API_URL}/api/birthdays`, { headers: { 'Authorization': pwd } }),
-        fetch(`${API_URL}/api/events`, { headers: { 'Authorization': pwd } })
+        fetch(`${API_URL}/api/schedule`, { headers: { 'Authorization': pwd } })
       ]);
       
       if (resBdays.ok && resEvents.ok) {
@@ -147,7 +147,7 @@ function App() {
     try {
       const isEdit = 'id' in data && data.id !== undefined;
       const method = isEdit ? 'PUT' : 'POST';
-      const url = isEdit ? `${API_URL}/api/events/${(data as EventRecord).id}` : `${API_URL}/api/events`;
+      const url = isEdit ? `${API_URL}/api/schedule/${(data as EventRecord).id}` : `${API_URL}/api/schedule`;
       
       const res = await fetch(url, {
         method,
@@ -171,7 +171,7 @@ function App() {
     if (!window.confirm('¿Seguro que deseas eliminar este evento?')) return;
     
     try {
-      const res = await fetch(`${API_URL}/api/events/${id}`, {
+      const res = await fetch(`${API_URL}/api/schedule/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': password
