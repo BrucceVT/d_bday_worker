@@ -201,7 +201,12 @@ function App() {
 
       <main className="main-content">
         {viewMode === 'calendar' ? (
-          <CalendarView birthdays={birthdays} onEditBirthday={openEditModal} />
+          <CalendarView 
+            birthdays={birthdays} 
+            events={events}
+            onEditBirthday={openEditModal} 
+            onEditEvent={openEditEventModal}
+          />
         ) : viewMode === 'list' ? (
           <ListView 
             birthdays={birthdays} 
