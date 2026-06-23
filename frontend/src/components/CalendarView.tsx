@@ -114,7 +114,7 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
       <div className="calendar-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button onClick={prevMonth} className="btn-icon"><ChevronLeft size={20}/></button>
-          <h3>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
+          <h3 style={{ margin: 0, minWidth: '180px', textAlign: 'center' }}>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
           <button onClick={nextMonth} className="btn-icon"><ChevronRight size={20}/></button>
         </div>
         
@@ -140,44 +140,60 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
           const bdays = getBirthdaysForDay(day);
           const evs = getEventsForDay(day);
           
+          let cellHasHighlight = false;
+          
+          const highlightedBdays = bdays.map(bday => {
+            const isH = searchTerm.trim().length > 1 && (
+              bday.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+              (bday.nickname && bday.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+            if (isH) cellHasHighlight = true;
+            return { ...bday, isHighlighted: isH };
+          });
+
+          const highlightedEvs = evs.map(ev => {
+            const isH = searchTerm.trim().length > 1 && ev.title.toLowerCase().includes(searchTerm.toLowerCase());
+            if (isH) cellHasHighlight = true;
+            return { ...ev, isHighlighted: isH };
+          });
+          
           return (
-            <div key={idx} className={`day-cell ${!day ? 'empty' : ''}`}>
-              {day && <span className="day-number">{day}</span>}
-              {day && (bdays.length > 0 || evs.length > 0) && (
+            <div 
+              key={idx} 
+              className={`day-cell ${!day ? 'empty' : ''}`}
+              style={cellHasHighlight ? { 
+                backgroundColor: 'rgba(139, 92, 246, 0.15)', 
+                borderColor: 'var(--primary)', 
+                boxShadow: 'inset 0 0 20px rgba(139, 92, 246, 0.2)' 
+              } : {}}
+            >
+              {day && <span className="day-number" style={cellHasHighlight ? { color: 'var(--primary)', fontWeight: 'bold' } : {}}>{day}</span>}
+              {day && (highlightedBdays.length > 0 || highlightedEvs.length > 0) && (
                 <div className="bday-pills">
-                  {bdays.map(bday => {
-                    const isHighlighted = searchTerm.trim().length > 1 && (
-                      bday.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                      (bday.nickname && bday.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
-                    );
+                  {highlightedBdays.map(bday => (
+                    <div 
+                      key={`bday-${bday.id}`} 
+                      className={`bday-pill ${bday.isHighlighted ? 'highlight-pulse' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); onEditBirthday(bday); }}
+                      title={bday.custom_message || ''}
+                      style={bday.isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {}}
+                    >
+                      <span className="pill-dot"></span>
+                      <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
+                    </div>
+                  ))}
 
-                    return (
-                      <div 
-                        key={`bday-${bday.id}`} 
-                        className={`bday-pill ${isHighlighted ? 'highlight-pulse' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onEditBirthday(bday); }}
-                        title={bday.custom_message || ''}
-                        style={isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {}}
-                      >
-                        <span className="pill-dot"></span>
-                        <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
-                      </div>
-                    );
-                  })}
-
-                  {evs.map(ev => {
-                    const isHighlighted = searchTerm.trim().length > 1 && ev.title.toLowerCase().includes(searchTerm.toLowerCase());
+                  {highlightedEvs.map(ev => {
                     const isPrivate = ev.type === 'private_event';
-
                     return (
                       <div 
                         key={`ev-${ev.id}`} 
-                        className={`bday-pill ${isHighlighted ? 'highlight-pulse' : ''}`}
+                        className={`bday-pill ${ev.isHighlighted ? 'highlight-pulse' : ''}`}
                         onClick={(e) => { e.stopPropagation(); onEditEvent(ev); }}
                         title={ev.description || ''}
                         style={{ 
                            background: isPrivate ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'linear-gradient(135deg, #10b981, #059669)',
-                           ...(isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {})
+                           ...(ev.isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {})
                         }}
                       >
                         <span className="pill-dot" style={{ background: 'white' }}></span>
