@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cake, Calendar, Image as ImageIcon, MessageSquare, Trash2, Edit2, LogOut, Plus, X, Lock } from 'lucide-react';
+import { Cake, Calendar, Image as ImageIcon, MessageSquare, Trash2, Edit2, LogOut, Plus, X, Lock, List, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
 
@@ -17,6 +17,10 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // View State
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
+  const [currentDate, setCurrentDate] = useState(new Date());
   
   // Create Form State
   const [name, setName] = useState('');
@@ -179,6 +183,45 @@ function App() {
     localStorage.removeItem('bday_pwd');
   };
 
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const prevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const getDaysInMonth = (year: number, month: number) => {
+    const date = new Date(year, month, 1);
+    const days = [];
+    
+    // Calculate empty days before the first day of the month (Monday = 0)
+    let firstDay = date.getDay() - 1;
+    if (firstDay === -1) firstDay = 6; // Sunday
+    
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+    
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    for (let i = 1; i <= lastDay; i++) {
+      days.push(i);
+    }
+    
+    return days;
+  };
+
+  const getBirthdaysForDay = (day: number | null) => {
+    if (!day) return [];
+    const monthStr = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    const targetDate = `${monthStr}-${dayStr}`;
+    return birthdays.filter(b => b.birth_date === targetDate);
+  };
+
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
   if (!isAuthenticated) {
     return (
       <div className="app-container" style={{ maxWidth: '400px', marginTop: '10vh' }}>
@@ -284,10 +327,28 @@ function App() {
 
         <section className="card">
           <div className="list-header">
-            <h2><Calendar size={24} color="var(--primary)" /> Lista de Cumpleaños</h2>
-            <span style={{color: 'var(--primary)', fontWeight: 600, background: 'rgba(139, 92, 246, 0.2)', padding: '0.2rem 0.8rem', borderRadius: '1rem'}}>
-              {birthdays.length}
-            </span>
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+              <h2><Calendar size={24} color="var(--primary)" /> Cumpleaños</h2>
+              <span style={{color: 'var(--primary)', fontWeight: 600, background: 'rgba(139, 92, 246, 0.2)', padding: '0.2rem 0.8rem', borderRadius: '1rem'}}>
+                {birthdays.length}
+              </span>
+            </div>
+            <div className="view-toggle">
+              <button 
+                className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+                title="Vista de Lista"
+              >
+                <List size={18} />
+              </button>
+              <button 
+                className={`toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={() => setViewMode('calendar')}
+                title="Vista de Calendario"
+              >
+                <CalendarDays size={18} />
+              </button>
+            </div>
           </div>
           
           {loading ? (
@@ -295,40 +356,81 @@ function App() {
               <div style={{animation: 'spin 1s linear infinite'}}><Cake size={32} color="var(--primary)"/></div>
               Cargando datos...
             </div>
-          ) : birthdays.length === 0 ? (
-            <div className="loading">
-              <Cake size={48} color="rgba(255,255,255,0.1)" />
-              <p>No hay cumpleaños registrados aún.</p>
-            </div>
+          ) : viewMode === 'list' ? (
+            birthdays.length === 0 ? (
+              <div className="loading">
+                <Cake size={48} color="rgba(255,255,255,0.1)" />
+                <p>No hay cumpleaños registrados aún.</p>
+              </div>
+            ) : (
+              <ul className="birthday-list">
+                {birthdays.map(bday => (
+                  <li key={bday.id} className="birthday-item">
+                    <div className="bday-info">
+                      {bday.image_url ? (
+                        <img src={bday.image_url} alt={bday.name} className="bday-avatar" />
+                      ) : (
+                        <div className="bday-avatar">{bday.name.charAt(0).toUpperCase()}</div>
+                      )}
+                      <div className="bday-details">
+                        <h3>{bday.nickname ? `${bday.name} (${bday.nickname})` : bday.name}</h3>
+                        <p><Calendar size={14} /> {formatDate(bday.birth_date)}</p>
+                        {bday.custom_message && (
+                          <p className="msg-preview">"{bday.custom_message.substring(0, 40)}{bday.custom_message.length > 40 ? '...' : ''}"</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bday-actions">
+                      <button onClick={() => handleEdit(bday)} className="btn-icon" title="Editar">
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(bday.id)} className="btn-icon danger" title="Eliminar">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )
           ) : (
-            <ul className="birthday-list">
-              {birthdays.map(bday => (
-                <li key={bday.id} className="birthday-item">
-                  <div className="bday-info">
-                    {bday.image_url ? (
-                      <img src={bday.image_url} alt={bday.name} className="bday-avatar" />
-                    ) : (
-                      <div className="bday-avatar">{bday.name.charAt(0).toUpperCase()}</div>
-                    )}
-                    <div className="bday-details">
-                      <h3>{bday.nickname ? `${bday.name} (${bday.nickname})` : bday.name}</h3>
-                      <p><Calendar size={14} /> {formatDate(bday.birth_date)}</p>
-                      {bday.custom_message && (
-                        <p className="msg-preview">"{bday.custom_message.substring(0, 40)}{bday.custom_message.length > 40 ? '...' : ''}"</p>
+            <div className="calendar-view">
+              <div className="calendar-header">
+                <button onClick={prevMonth} className="btn-icon"><ChevronLeft size={20}/></button>
+                <h3>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
+                <button onClick={nextMonth} className="btn-icon"><ChevronRight size={20}/></button>
+              </div>
+              
+              <div className="calendar-grid">
+                {daysOfWeek.map(day => (
+                  <div key={day} className="calendar-day-name">{day}</div>
+                ))}
+                
+                {getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth()).map((day, idx) => {
+                  const bdays = getBirthdaysForDay(day);
+                  const isToday = day && day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+                  
+                  return (
+                    <div key={idx} className={`calendar-cell ${day ? '' : 'empty'} ${isToday ? 'today' : ''} ${bdays.length > 0 ? 'has-bday' : ''}`}>
+                      {day && <span className="day-number">{day}</span>}
+                      {day && bdays.length > 0 && (
+                        <div className="bday-pills">
+                          {bdays.map(bday => (
+                            <div key={bday.id} className="bday-pill" onClick={() => handleEdit(bday)} title="Editar">
+                              {bday.image_url ? (
+                                <img src={bday.image_url} alt={bday.name} className="pill-avatar" />
+                              ) : (
+                                <div className="pill-avatar text-avatar">{bday.name.charAt(0).toUpperCase()}</div>
+                              )}
+                              <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
-                  </div>
-                  <div className="bday-actions">
-                    <button onClick={() => handleEdit(bday)} className="btn-icon" title="Editar">
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(bday.id)} className="btn-icon danger" title="Eliminar">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </section>
       </main>
