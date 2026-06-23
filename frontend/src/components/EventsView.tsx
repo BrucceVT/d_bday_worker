@@ -75,20 +75,49 @@ export function EventsView({ events, onAddEvent, onEditEvent, onDeleteEvent }: E
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ 
+        display: 'flex', 
+        background: 'rgba(0,0,0,0.2)', 
+        borderRadius: '12px', 
+        padding: '0.35rem', 
+        marginBottom: '1.5rem',
+        border: '1px solid var(--glass-border)'
+      }}>
         <button 
-          className={`toggle-btn ${activeTab === 'private' ? 'active' : ''}`}
           onClick={() => setActiveTab('private')}
-          style={{ flex: 1, padding: '0.75rem', fontWeight: 600, background: activeTab === 'private' ? 'var(--primary)' : 'rgba(0,0,0,0.2)' }}
+          style={{ 
+            flex: 1, 
+            padding: '0.6rem', 
+            fontWeight: 600, 
+            background: activeTab === 'private' ? 'var(--primary)' : 'transparent', 
+            border: 'none',
+            borderRadius: '8px',
+            color: activeTab === 'private' ? '#fff' : 'var(--text-muted)',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer'
+          }}
         >
           Salidas Privadas
         </button>
         <button 
-          className={`toggle-btn ${activeTab === 'holidays' ? 'active' : ''}`}
           onClick={() => setActiveTab('holidays')}
-          style={{ flex: 1, padding: '0.75rem', fontWeight: 600, background: activeTab === 'holidays' ? 'var(--primary)' : 'rgba(0,0,0,0.2)' }}
+          style={{ 
+            flex: 1, 
+            padding: '0.6rem', 
+            fontWeight: 600, 
+            background: activeTab === 'holidays' ? 'var(--primary)' : 'transparent',
+            border: 'none',
+            borderRadius: '8px',
+            color: activeTab === 'holidays' ? '#fff' : 'var(--text-muted)',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
+          }}
         >
-          <Globe size={18} style={{ display: 'inline', marginBottom: '-3px' }} /> Feriados
+          <Globe size={18} /> Feriados
         </button>
       </div>
       
