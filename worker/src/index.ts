@@ -64,51 +64,130 @@ export default {
       return Response.json({ success: true }, { headers: corsHeaders });
     }
 
+    // --- EVENTS API ---
+    if (path === '/api/events') {
+      if (request.method === 'GET') {
+        const { results } = await env.DB.prepare('SELECT * FROM events ORDER BY event_date ASC').all();
+        return Response.json(results, { headers: corsHeaders });
+      }
+
+      if (request.method === 'POST') {
+        const body: any = await request.json();
+        if (!body.title || !body.event_date || !body.type) {
+          return new Response('Title, event_date, and type are required', { status: 400, headers: corsHeaders });
+        }
+        const result = await env.DB.prepare(
+          'INSERT INTO events (title, event_date, type, description) VALUES (?, ?, ?, ?)'
+        ).bind(body.title, body.event_date, body.type, body.description || null).run();
+        
+        return Response.json({ success: true, id: result.meta.last_row_id }, { headers: corsHeaders });
+      }
+    }
+
+    if (path.startsWith('/api/events/') && request.method === 'DELETE') {
+      const id = path.split('/').pop();
+      await env.DB.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
+      return Response.json({ success: true }, { headers: corsHeaders });
+    }
+
+    if (path.startsWith('/api/events/') && request.method === 'PUT') {
+      const id = path.split('/').pop();
+      const body: any = await request.json();
+      if (!body.title || !body.event_date || !body.type) {
+        return new Response('Title, event_date, and type are required', { status: 400, headers: corsHeaders });
+      }
+      await env.DB.prepare(
+        'UPDATE events SET title = ?, event_date = ?, type = ?, description = ? WHERE id = ?'
+      ).bind(body.title, body.event_date, body.type, body.description || null, id).run();
+      
+      return Response.json({ success: true }, { headers: corsHeaders });
+    }
+
     return new Response('Not Found', { status: 404, headers: corsHeaders });
   },
 
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    // Cron is scheduled at 13:00 UTC, which is 08:00 AM America/Lima
-    // Get current date in America/Lima
-    const limaDate = new Date().toLocaleString("en-US", { timeZone: "America/Lima" });
-    const dateObj = new Date(limaDate);
+    const limaDateStr = new Date().toLocaleString("en-US", { timeZone: "America/Lima" });
+    const limaDateObj = new Date(limaDateStr);
     
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(limaDateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(limaDateObj.getDate()).padStart(2, '0');
     const todayStr = `${month}-${day}`; // Format MM-DD
+    const fullTodayStr = `${limaDateObj.getFullYear()}-${month}-${day}`; // YYYY-MM-DD
+    const currentHour = limaDateObj.getHours();
 
-    const { results } = await env.DB.prepare(
-      'SELECT * FROM birthdays WHERE birth_date LIKE ?'
-    ).bind(`%${todayStr}`).all();
+    const messages: any[] = [];
 
-    if (results && results.length > 0) {
-      if (!env.DISCORD_WEBHOOK_URL) {
-        console.error('DISCORD_WEBHOOK_URL is not set');
-        return;
+    // Tareas de las 08:00 AM (Avisos de todo el día)
+    if (currentHour === 8) {
+      // 1. Cumpleaños
+      const { results: bdays } = await env.DB.prepare('SELECT * FROM birthdays WHERE birth_date LIKE ?').bind(`%${todayStr}`).all();
+      if (bdays && bdays.length > 0) {
+        for (const bday of bdays) {
+          const name = bday.name as string;
+          const nickname = bday.nickname as string | null;
+          const imageUrl = bday.image_url as string | null;
+          const customMsg = bday.custom_message as string | null;
+
+          let content = customMsg ? customMsg : `🎉 ¡Feliz cumpleaños, **${nickname || name}**! 🎂 Que tengas un día excelente. 🥳`;
+          messages.push({ content, imageUrl });
+        }
       }
 
-      for (const bday of results) {
-        const name = bday.name as string;
-        const nickname = bday.nickname as string | null;
-        const imageUrl = bday.image_url as string | null;
-        const customMsg = bday.custom_message as string | null;
+      // 2. Eventos / Feriados de HOY
+      const { results: events } = await env.DB.prepare(`
+        SELECT * FROM events 
+        WHERE (type IN ('holiday_global', 'holiday_local') AND event_date LIKE ?)
+           OR (type = 'private_event' AND event_date LIKE ?)
+      `).bind(`%${todayStr}`, `${fullTodayStr}%`).all();
 
-        let content = customMsg ? customMsg : `🎉 ¡Feliz cumpleaños, **${nickname || name}**! 🎂 Que tengas un día excelente. 🥳`;
-        
+      if (events && events.length > 0) {
+        for (const ev of events) {
+          const title = ev.title as string;
+          const desc = ev.description as string | null;
+          const type = ev.type as string;
+          
+          let prefix = type === 'holiday_global' ? '🌍 Feriado Global' : 
+                       type === 'holiday_local' ? '🇵🇪 Feriado Arequipa/Perú' : 
+                       '📅 Evento Organizado Hoy';
+                       
+          let content = `**${prefix}: ${title}**\n${desc || ''}`;
+          messages.push({ content, imageUrl: null });
+        }
+      }
+    }
+
+    // 3. Revisión cada hora para eventos privados que sean en 1 hora
+    const nextHourObj = new Date(limaDateObj.getTime() + 60 * 60 * 1000);
+    const nextHourDateStr = `${nextHourObj.getFullYear()}-${String(nextHourObj.getMonth()+1).padStart(2,'0')}-${String(nextHourObj.getDate()).padStart(2,'0')}`;
+    const nextHourStrSpace = `${nextHourDateStr} ${String(nextHourObj.getHours()).padStart(2,'0')}`;
+    const nextHourStrT = `${nextHourDateStr}T${String(nextHourObj.getHours()).padStart(2,'0')}`;
+    
+    const { results: upcomingEvents } = await env.DB.prepare(`
+      SELECT * FROM events 
+      WHERE type = 'private_event' AND (event_date LIKE ? OR event_date LIKE ?)
+    `).bind(`${nextHourStrSpace}%`, `${nextHourStrT}%`).all();
+
+    if (upcomingEvents && upcomingEvents.length > 0) {
+      for (const ev of upcomingEvents) {
+        const title = ev.title as string;
+        const desc = ev.description as string | null;
+        let content = `⏰ **¡RECORDATORIO! En aprox. 1 hora tenemos:**\n**${title}**\n${desc || ''}`;
+        messages.push({ content, imageUrl: null });
+      }
+    }
+
+    // Enviar todos los mensajes recolectados
+    if (messages.length > 0 && env.DISCORD_WEBHOOK_URL) {
+      for (const msg of messages) {
         const payload: any = {
-          content,
+          content: msg.content,
           username: "CelebraBot",
           avatar_url: "https://cdn-icons-png.flaticon.com/512/3592/3592750.png"
         };
 
-        if (imageUrl) {
-          payload.embeds = [
-            {
-              image: {
-                url: imageUrl
-              }
-            }
-          ];
+        if (msg.imageUrl) {
+          payload.embeds = [{ image: { url: msg.imageUrl } }];
         }
 
         await fetch(env.DISCORD_WEBHOOK_URL, {

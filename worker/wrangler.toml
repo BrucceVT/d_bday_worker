@@ -17,5 +17,6 @@ database_name = "celebrabot-db"
 database_id = "87cdb935-b847-4558-97b0-e2c5820d7145"
 
 [triggers]
-# Ejecutar todos los días a las 13:00 UTC (08:00 AM Perú)
-crons = ["0 13 * * *"]
+# Ejecutar cada hora para validar eventos privados próximos,
+# pero los cumpleaños y feriados solo se avisarán a las 08:00 AM (hora Perú)
+crons = ["0 * * * *"]

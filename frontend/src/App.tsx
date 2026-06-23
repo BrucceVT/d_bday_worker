@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { Birthday } from './types';
+import type { Birthday, EventRecord } from './types';
 import { Login } from './components/Login';
 import { Sidebar } from './components/Sidebar';
 import { CalendarView } from './components/CalendarView';
 import { ListView } from './components/ListView';
 import { BirthdayModal } from './components/BirthdayModal';
+import { EventsView } from './components/EventsView';
+import { EventModal } from './components/EventModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
 
@@ -12,26 +14,32 @@ function App() {
   const [password, setPassword] = useState<string>(() => localStorage.getItem('bday_pwd') || '');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
+  const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(false);
   
   // View State
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'events'>('calendar');
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBirthday, setEditingBirthday] = useState<Birthday | undefined>(undefined);
+  
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventRecord | null>(null);
 
-  const fetchBirthdays = async (pwd: string) => {
+  const fetchData = async (pwd: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/birthdays`, {
-        headers: {
-          'Authorization': pwd
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setBirthdays(data);
+      const [resBdays, resEvents] = await Promise.all([
+        fetch(`${API_URL}/api/birthdays`, { headers: { 'Authorization': pwd } }),
+        fetch(`${API_URL}/api/events`, { headers: { 'Authorization': pwd } })
+      ]);
+      
+      if (resBdays.ok && resEvents.ok) {
+        const dataBdays = await resBdays.json();
+        const dataEvents = await resEvents.json();
+        setBirthdays(dataBdays);
+        setEvents(dataEvents);
         setIsAuthenticated(true);
         localStorage.setItem('bday_pwd', pwd);
       } else {
@@ -40,7 +48,7 @@ function App() {
         if (pwd) alert('Contraseña incorrecta');
       }
     } catch (err) {
-      console.error('Error fetching birthdays:', err);
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
@@ -48,13 +56,13 @@ function App() {
 
   useEffect(() => {
     if (password) {
-      fetchBirthdays(password);
+      fetchData(password);
     }
   }, []);
 
   const handleLogin = (pwd: string) => {
     setPassword(pwd);
-    fetchBirthdays(pwd);
+    fetchData(pwd);
   };
 
   const handleLogout = () => {
@@ -78,6 +86,21 @@ function App() {
     setEditingBirthday(undefined);
   };
 
+  const openAddEventModal = () => {
+    setEditingEvent(null);
+    setIsEventModalOpen(true);
+  };
+
+  const openEditEventModal = (ev: EventRecord) => {
+    setEditingEvent(ev);
+    setIsEventModalOpen(true);
+  };
+
+  const closeEventModal = () => {
+    setIsEventModalOpen(false);
+    setEditingEvent(null);
+  };
+
   const handleSaveBirthday = async (data: Partial<Birthday>) => {
     try {
       const method = data.id ? 'PUT' : 'POST';
@@ -94,7 +117,7 @@ function App() {
 
       if (res.ok) {
         closeModal();
-        fetchBirthdays(password);
+        fetchData(password);
       }
     } catch (err) {
       console.error('Error saving birthday:', err);
@@ -113,10 +136,53 @@ function App() {
       });
       
       if (res.ok) {
-        fetchBirthdays(password);
+        fetchData(password);
       }
     } catch (err) {
       console.error('Error deleting birthday:', err);
+    }
+  };
+
+  const handleSaveEvent = async (data: Omit<EventRecord, 'id'> | EventRecord) => {
+    try {
+      const isEdit = 'id' in data && data.id !== undefined;
+      const method = isEdit ? 'PUT' : 'POST';
+      const url = isEdit ? `${API_URL}/api/events/${(data as EventRecord).id}` : `${API_URL}/api/events`;
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': password
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        closeEventModal();
+        fetchData(password);
+      }
+    } catch (err) {
+      console.error('Error saving event:', err);
+    }
+  };
+
+  const handleDeleteEvent = async (id: number) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este evento?')) return;
+    
+    try {
+      const res = await fetch(`${API_URL}/api/events/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': password
+        }
+      });
+      
+      if (res.ok) {
+        fetchData(password);
+      }
+    } catch (err) {
+      console.error('Error deleting event:', err);
     }
   };
 
@@ -136,11 +202,18 @@ function App() {
       <main className="main-content">
         {viewMode === 'calendar' ? (
           <CalendarView birthdays={birthdays} onEditBirthday={openEditModal} />
-        ) : (
+        ) : viewMode === 'list' ? (
           <ListView 
             birthdays={birthdays} 
             onEditBirthday={openEditModal} 
             onDeleteBirthday={handleDeleteBirthday} 
+          />
+        ) : (
+          <EventsView
+            events={events}
+            onAddEvent={openAddEventModal}
+            onEditEvent={openEditEventModal}
+            onDeleteEvent={handleDeleteEvent}
           />
         )}
       </main>
@@ -150,6 +223,15 @@ function App() {
           birthday={editingBirthday} 
           onClose={closeModal} 
           onSave={handleSaveBirthday} 
+        />
+      )}
+
+      {isEventModalOpen && (
+        <EventModal
+          event={editingEvent}
+          onClose={closeEventModal}
+          onSave={handleSaveEvent}
+          isLoading={loading}
         />
       )}
       

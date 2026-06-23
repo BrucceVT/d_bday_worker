@@ -1,8 +1,8 @@
-import { CalendarDays, List, LogOut, User, Plus } from 'lucide-react';
+import { CalendarDays, List, LogOut, User, Plus, CalendarHeart } from 'lucide-react';
 
 interface SidebarProps {
-  viewMode: 'list' | 'calendar';
-  setViewMode: (mode: 'list' | 'calendar') => void;
+  viewMode: 'list' | 'calendar' | 'events';
+  setViewMode: (mode: 'list' | 'calendar' | 'events') => void;
   onLogout: () => void;
   onAddBirthday: () => void;
 }
@@ -29,6 +29,14 @@ export function Sidebar({ viewMode, setViewMode, onLogout, onAddBirthday }: Side
         >
           <List size={20} />
           <span>Lista de Amigos</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${viewMode === 'events' ? 'active' : ''}`}
+          onClick={() => setViewMode('events')}
+        >
+          <CalendarHeart size={20} />
+          <span>Eventos</span>
         </button>
         
         <button 
