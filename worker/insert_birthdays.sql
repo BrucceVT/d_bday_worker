@@ -1,8 +1,0 @@
-INSERT INTO birthdays (name, birth_date, image_url, custom_message) VALUES
-('Emerson Miguel Puma Quispe (Sqlazo)', '2000-07-21', 'https://images.unsplash.com/photo-1530103862676-de8892d47ea4?auto=format&fit=crop&q=80&w=300&h=300', '¡Feliz cumpleaños Sqlazo! Que tengas un día increíble lleno de éxitos.'),
-('Brucce Yul Villena Terreros (Thewokg)', '2000-07-26', 'https://images.unsplash.com/photo-1530103862676-de8892d47ea4?auto=format&fit=crop&q=80&w=300&h=300', '¡Feliz cumpleaños Thewokg! Disfruta mucho tu día a lo grande.'),
-('George Miguel Puma Salcedo (Mathi03)', '2000-08-28', 'https://images.unsplash.com/photo-1530103862676-de8892d47ea4?auto=format&fit=crop&q=80&w=300&h=300', '¡Feliz cumpleaños Mathi03! Pásala súper genial hoy.'),
-('Jean Marco Miranda Llanos (Jacket)', '2000-01-04', 'https://images.unsplash.com/photo-1530103862676-de8892d47ea4?auto=format&fit=crop&q=80&w=300&h=300', '¡Feliz cumpleaños Jacket! Que este nuevo año te traiga muchos éxitos.'),
-('Frank Claudio Cary Viveros (Rompeanos03)', '2000-01-20', 'https://images.unsplash.com/photo-1530103862676-de8892d47ea4?auto=format&fit=crop&q=80&w=300&h=300', '¡Feliz cumpleaños Rompeanos03! A celebrar a lo grande.'),
-('Jose Carlo Bayton Coaguila (Galeid)', '2000-04-13', 'https://images.unsplash.com/photo-1530103862676-de8892d47ea4?auto=format&fit=crop&q=80&w=300&h=300', '¡Feliz cumpleaños Galeid! Que tengas un cumpleaños fenomenal.'),
-('Eddy Alvaro Arenas Chambi (Dedo)', '2000-05-02', 'https://images.unsplash.com/photo-1530103862676-de8892d47ea4?auto=format&fit=crop&q=80&w=300&h=300', '¡Feliz cumpleaños Dedo! Los mejores deseos en tu día.');
