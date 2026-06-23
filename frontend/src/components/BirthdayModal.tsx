@@ -93,14 +93,14 @@ export function BirthdayModal({ birthday, onClose, onSave }: BirthdayModalProps)
           <div className="form-group">
             <label><Calendar size={16} style={{display:'inline', marginBottom:'-3px'}}/> Fecha de Cumpleaños</label>
             <div className="date-selects">
-              <select className="form-control" value={day} onChange={e => setDay(e.target.value)}>
+              <select className="form-control date-select" value={day} onChange={e => setDay(e.target.value)}>
                 {Array.from({length: daysInMonth}, (_, i) => i + 1).map(d => {
                   const dayStr = String(d).padStart(2, '0');
                   return <option key={d} value={dayStr}>{dayStr}</option>;
                 })}
               </select>
               <span className="date-separator">de</span>
-              <select className="form-control" value={month} onChange={e => setMonth(e.target.value)}>
+              <select className="form-control date-select" value={month} onChange={e => setMonth(e.target.value)}>
                 {MONTHS.map(m => (
                   <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
