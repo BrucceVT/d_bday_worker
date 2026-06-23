@@ -68,17 +68,7 @@ export function CalendarView({ birthdays, onEditBirthday }: CalendarViewProps) {
     const monthStr = String(currentDate.getMonth() + 1).padStart(2, '0');
     const dayStr = String(day).padStart(2, '0');
     const targetDate = `${monthStr}-${dayStr}`;
-    let dayBirthdays = birthdays.filter(b => b.birth_date === targetDate);
-    
-    if (searchTerm) {
-      const lower = searchTerm.toLowerCase();
-      dayBirthdays = dayBirthdays.filter(b => 
-        b.name.toLowerCase().includes(lower) || 
-        (b.nickname && b.nickname.toLowerCase().includes(lower))
-      );
-    }
-    
-    return dayBirthdays;
+    return birthdays.filter(b => b.birth_date === targetDate);
   };
 
   return (
