@@ -6,6 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
 interface Birthday {
   id: number;
   name: string;
+  nickname?: string | null;
   birth_date: string;
   image_url: string | null;
   custom_message: string | null;
@@ -19,6 +20,7 @@ function App() {
   
   // Create Form State
   const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [customMessage, setCustomMessage] = useState('');
@@ -26,6 +28,7 @@ function App() {
   // Edit State
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
+  const [editNickname, setEditNickname] = useState('');
   const [editBirthDate, setEditBirthDate] = useState('');
   const [editImageUrl, setEditImageUrl] = useState('');
   const [editCustomMessage, setEditCustomMessage] = useState('');
@@ -77,6 +80,7 @@ function App() {
         },
         body: JSON.stringify({
           name,
+          nickname: nickname || null,
           birth_date: formattedDate,
           image_url: imageUrl || null,
           custom_message: customMessage || null
@@ -85,6 +89,7 @@ function App() {
 
       if (res.ok) {
         setName('');
+        setNickname('');
         setBirthDate('');
         setImageUrl('');
         setCustomMessage('');
@@ -98,6 +103,7 @@ function App() {
   const handleEdit = (bday: Birthday) => {
     setEditingId(bday.id);
     setEditName(bday.name);
+    setEditNickname(bday.nickname || '');
     // Necesitamos añadir un año dummy para que el input type="date" lo lea
     setEditBirthDate(`2000-${bday.birth_date}`);
     setEditImageUrl(bday.image_url || '');
@@ -119,6 +125,7 @@ function App() {
         },
         body: JSON.stringify({
           name: editName,
+          nickname: editNickname || null,
           birth_date: formattedDate,
           image_url: editImageUrl || null,
           custom_message: editCustomMessage || null
@@ -227,6 +234,17 @@ function App() {
                 required
               />
             </div>
+
+            <div className="form-group">
+              <label>Apodo / Nickname (Opcional)</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={nickname} 
+                onChange={e => setNickname(e.target.value)} 
+                placeholder="Ej. El Juancho"
+              />
+            </div>
             
             <div className="form-group">
               <label><Calendar size={16} style={{display:'inline', marginBottom:'-3px'}}/> Fecha de Cumpleaños</label>
@@ -293,7 +311,7 @@ function App() {
                       <div className="bday-avatar">{bday.name.charAt(0).toUpperCase()}</div>
                     )}
                     <div className="bday-details">
-                      <h3>{bday.name}</h3>
+                      <h3>{bday.nickname ? `${bday.name} (${bday.nickname})` : bday.name}</h3>
                       <p><Calendar size={14} /> {formatDate(bday.birth_date)}</p>
                       {bday.custom_message && (
                         <p className="msg-preview">"{bday.custom_message.substring(0, 40)}{bday.custom_message.length > 40 ? '...' : ''}"</p>
@@ -332,6 +350,16 @@ function App() {
                   value={editName} 
                   onChange={e => setEditName(e.target.value)} 
                   required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Apodo / Nickname (Opcional)</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={editNickname} 
+                  onChange={e => setEditNickname(e.target.value)} 
                 />
               </div>
               

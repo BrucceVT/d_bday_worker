@@ -38,8 +38,8 @@ export default {
           return new Response('Name and birth_date are required', { status: 400, headers: corsHeaders });
         }
         const result = await env.DB.prepare(
-          'INSERT INTO birthdays (name, birth_date, image_url, custom_message) VALUES (?, ?, ?, ?)'
-        ).bind(body.name, body.birth_date, body.image_url || null, body.custom_message || null).run();
+          'INSERT INTO birthdays (name, nickname, birth_date, image_url, custom_message) VALUES (?, ?, ?, ?, ?)'
+        ).bind(body.name, body.nickname || null, body.birth_date, body.image_url || null, body.custom_message || null).run();
         
         return Response.json({ success: true, id: result.meta.last_row_id }, { headers: corsHeaders });
       }
@@ -58,8 +58,8 @@ export default {
         return new Response('Name and birth_date are required', { status: 400, headers: corsHeaders });
       }
       await env.DB.prepare(
-        'UPDATE birthdays SET name = ?, birth_date = ?, image_url = ?, custom_message = ? WHERE id = ?'
-      ).bind(body.name, body.birth_date, body.image_url || null, body.custom_message || null, id).run();
+        'UPDATE birthdays SET name = ?, nickname = ?, birth_date = ?, image_url = ?, custom_message = ? WHERE id = ?'
+      ).bind(body.name, body.nickname || null, body.birth_date, body.image_url || null, body.custom_message || null, id).run();
       
       return Response.json({ success: true }, { headers: corsHeaders });
     }
@@ -89,10 +89,11 @@ export default {
 
       for (const bday of results) {
         const name = bday.name as string;
+        const nickname = bday.nickname as string | null;
         const imageUrl = bday.image_url as string | null;
         const customMsg = bday.custom_message as string | null;
 
-        let content = customMsg ? customMsg : `🎉 ¡Feliz cumpleaños, **${name}**! 🎂 Que tengas un día excelente. 🥳`;
+        let content = customMsg ? customMsg : `🎉 ¡Feliz cumpleaños, **${nickname || name}**! 🎂 Que tengas un día excelente. 🥳`;
         
         const payload: any = {
           content,
