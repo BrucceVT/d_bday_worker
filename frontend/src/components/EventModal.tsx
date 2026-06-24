@@ -174,14 +174,14 @@ export function EventModal({ event, onSave, onClose, isLoading }: EventModalProp
                   placeholder="Año" 
                   value={year}
                   onChange={e => setYear(e.target.value)}
-                  style={{ width: '80px' }}
+                  style={{ flex: 1, padding: '0.85rem 0.5rem', textAlign: 'center' }}
                 />
               )}
               <select 
                 className="form-control" 
                 value={month} 
                 onChange={e => setMonth(e.target.value)}
-                style={{ flex: 1 }}
+                style={{ flex: 2, padding: '0.85rem 0.5rem' }}
               >
                 <option value="01">Enero</option>
                 <option value="02">Febrero</option>
@@ -204,7 +204,7 @@ export function EventModal({ event, onSave, onClose, isLoading }: EventModalProp
                 value={day} 
                 onChange={e => setDay(e.target.value)}
                 placeholder="Día"
-                style={{ width: '70px' }}
+                style={{ flex: 1, padding: '0.85rem 0.5rem', textAlign: 'center' }}
                 required
               />
             </div>
