@@ -25,8 +25,7 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
+  const handleSearchChange = (val: string) => {
     setSearchTerm(val);
     
     if (val.trim().length > 1) {
