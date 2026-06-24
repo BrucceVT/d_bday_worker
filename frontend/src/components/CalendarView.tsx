@@ -15,6 +15,7 @@ const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
+  const [calendarMode, setCalendarMode] = useState<'month' | 'year'>('month');
 
   const nextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
@@ -122,111 +123,158 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
           <select 
             value={currentDate.getMonth()} 
             onChange={(e) => setCurrentDate(new Date(currentDate.getFullYear(), parseInt(e.target.value), 1))}
-            className="input-field"
-            style={{ padding: '0.5rem', minWidth: '130px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)' }}
+            className="filter-select"
           >
-            {MONTH_NAMES.map((m, i) => <option key={i} value={i} style={{ color: 'black' }}>{m}</option>)}
+            {MONTH_NAMES.map((m, i) => <option key={i} value={i}>{m}</option>)}
           </select>
           <input 
             type="number" 
             value={currentDate.getFullYear()} 
             onChange={(e) => setCurrentDate(new Date(parseInt(e.target.value), currentDate.getMonth(), 1))}
-            className="input-field"
-            style={{ padding: '0.5rem', width: '90px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)' }}
+            className="filter-number"
+            style={{ width: '85px' }}
           />
         </div>
         
-        <div className="search-box" style={{ position: 'relative', minWidth: '250px' }}>
+        <div className="search-box" style={{ position: 'relative', minWidth: '200px', flex: '1 1 auto' }}>
           <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input 
             type="text" 
-            className="form-control" 
-            placeholder="Buscar amigo en calendario..." 
+            className="input-field" 
+            placeholder="Buscar persona o evento..." 
             value={searchTerm}
-            onChange={handleSearchChange}
-            style={{ paddingLeft: '2.5rem' }}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            style={{ paddingLeft: '2.5rem', width: '100%' }}
           />
+        </div>
+
+        <div className="toggle-view-container">
+          <button className={`toggle-view-btn ${calendarMode === 'month' ? 'active' : ''}`} onClick={() => setCalendarMode('month')}>Mes</button>
+          <button className={`toggle-view-btn ${calendarMode === 'year' ? 'active' : ''}`} onClick={() => setCalendarMode('year')}>Año</button>
         </div>
       </div>
       
-      <div className="calendar-grid">
-        {DAYS_OF_WEEK.map(day => (
-          <div key={day} className="calendar-day-name">{day}</div>
-        ))}
-        
-        {getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth()).map((day, idx) => {
-          const bdays = getBirthdaysForDay(day);
-          const evs = getEventsForDay(day);
-          
-          let cellHasHighlight = false;
-          
-          const highlightedBdays = bdays.map(bday => {
-            const isH = searchTerm.trim().length > 1 && (
-              bday.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-              (bday.nickname && bday.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
-            );
-            if (isH) cellHasHighlight = true;
-            return { ...bday, isHighlighted: isH };
-          });
-
-          const highlightedEvs = evs.map(ev => {
-            const isH = searchTerm.trim().length > 1 && ev.title.toLowerCase().includes(searchTerm.toLowerCase());
-            if (isH) cellHasHighlight = true;
-            return { ...ev, isHighlighted: isH };
-          });
-          
-          const isToday = day && day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
-          
-          return (
-            <div 
-              key={idx} 
-              className={`calendar-cell ${!day ? 'empty' : ''} ${isToday ? 'today' : ''}`}
-              style={cellHasHighlight ? { 
-                backgroundColor: 'rgba(139, 92, 246, 0.15)', 
-                borderColor: 'var(--primary)', 
-                boxShadow: 'inset 0 0 20px rgba(139, 92, 246, 0.2)' 
-              } : {}}
-            >
-              {day && <span className="day-number" style={cellHasHighlight ? { color: 'var(--primary)', fontWeight: 'bold' } : {}}>{day}</span>}
-              {day && (highlightedBdays.length > 0 || highlightedEvs.length > 0) && (
-                <div className="bday-pills">
-                  {highlightedBdays.map(bday => (
-                    <div 
-                      key={`bday-${bday.id}`} 
-                      className={`bday-pill ${bday.isHighlighted ? 'highlight-pulse' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); onEditBirthday(bday); }}
-                      title={bday.custom_message || ''}
-                      style={bday.isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {}}
-                    >
-                      <span className="pill-dot"></span>
-                      <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
-                    </div>
-                  ))}
-
-                  {highlightedEvs.map(ev => {
-                    const isPrivate = ev.type === 'private_event';
+      {calendarMode === 'year' ? (
+        <div className="yearly-grid">
+          {Array.from({ length: 12 }, (_, i) => i).map(month => {
+            const daysInMonth = getDaysInMonth(currentDate.getFullYear(), month);
+            return (
+              <div 
+                key={month} 
+                className="mini-month"
+                onClick={() => {
+                  setCurrentDate(new Date(currentDate.getFullYear(), month, 1));
+                  setCalendarMode('month');
+                }}
+              >
+                <h4>{MONTH_NAMES[month]}</h4>
+                <div className="mini-grid">
+                  {['L','M','X','J','V','S','D'].map(d => <div key={d} className="mini-day-name">{d}</div>)}
+                  {daysInMonth.map((day, idx) => {
+                    if (!day) return <div key={`empty-${idx}`} className="mini-cell empty"></div>;
+                    
+                    const monthStr = String(month + 1).padStart(2, '0');
+                    const dayStr = String(day).padStart(2, '0');
+                    const targetMMDD = `${monthStr}-${dayStr}`;
+                    const targetYYYYMMDD = `${currentDate.getFullYear()}-${monthStr}-${dayStr}`;
+                    
+                    const hasBday = birthdays.some(b => b.birth_date === targetMMDD);
+                    const ev = events.find(e => e.event_date === targetMMDD || e.event_date.startsWith(targetYYYYMMDD));
+                    const isToday = day === new Date().getDate() && month === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+                    
                     return (
-                      <div 
-                        key={`ev-${ev.id}`} 
-                        className={`bday-pill ${ev.isHighlighted ? 'highlight-pulse' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onEditEvent(ev); }}
-                        title={ev.description || ''}
-                        style={{ 
-                           background: isPrivate ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'linear-gradient(135deg, #10b981, #059669)',
-                           ...(ev.isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {})
-                        }}
-                      >
-                        <span className="pill-dot" style={{ background: 'white' }}></span>
-                        <span className="pill-name" style={{ color: 'white' }}>{ev.title}</span>
+                      <div key={idx} className={`mini-cell`} style={isToday ? { color: 'var(--primary)', fontWeight: 'bold' } : {}}>
+                        {day}
+                        {hasBday && <div className="event-dot" style={{ background: 'var(--secondary)' }}></div>}
+                        {!hasBday && ev && <div className="event-dot" style={{ background: '#10b981' }}></div>}
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="calendar-grid">
+          {DAYS_OF_WEEK.map(day => (
+            <div key={day} className="calendar-day-name">{day}</div>
+          ))}
+          
+          {getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth()).map((day, idx) => {
+            const bdays = getBirthdaysForDay(day);
+            const evs = getEventsForDay(day);
+            
+            let cellHasHighlight = false;
+            
+            const highlightedBdays = bdays.map(bday => {
+              const isH = searchTerm.trim().length > 1 && (
+                bday.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                (bday.nickname && bday.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
+              );
+              if (isH) cellHasHighlight = true;
+              return { ...bday, isHighlighted: isH };
+            });
+
+            const highlightedEvs = evs.map(ev => {
+              const isH = searchTerm.trim().length > 1 && ev.title.toLowerCase().includes(searchTerm.toLowerCase());
+              if (isH) cellHasHighlight = true;
+              return { ...ev, isHighlighted: isH };
+            });
+            
+            const isToday = day && day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+            
+            return (
+              <div 
+                key={idx} 
+                className={`calendar-cell ${!day ? 'empty' : ''} ${isToday ? 'today' : ''}`}
+                style={cellHasHighlight ? { 
+                  backgroundColor: 'rgba(139, 92, 246, 0.15)', 
+                  borderColor: 'var(--primary)', 
+                  boxShadow: 'inset 0 0 20px rgba(139, 92, 246, 0.2)' 
+                } : {}}
+              >
+                {day && <span className="day-number" style={cellHasHighlight ? { color: 'var(--primary)', fontWeight: 'bold' } : {}}>{day}</span>}
+                {day && (highlightedBdays.length > 0 || highlightedEvs.length > 0) && (
+                  <div className="bday-pills">
+                    {highlightedBdays.map(bday => (
+                      <div 
+                        key={`bday-${bday.id}`} 
+                        className={`bday-pill ${bday.isHighlighted ? 'highlight-pulse' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); onEditBirthday(bday); }}
+                        title={bday.custom_message || ''}
+                        style={bday.isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {}}
+                      >
+                        <span className="pill-dot"></span>
+                        <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
+                      </div>
+                    ))}
+
+                    {highlightedEvs.map(ev => {
+                      const isPrivate = ev.type === 'private_event';
+                      return (
+                        <div 
+                          key={`ev-${ev.id}`} 
+                          className={`bday-pill ${ev.isHighlighted ? 'highlight-pulse' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); onEditEvent(ev); }}
+                          title={ev.description || ''}
+                          style={{ 
+                             background: isPrivate ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'linear-gradient(135deg, #10b981, #059669)',
+                             ...(ev.isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {})
+                          }}
+                        >
+                          <span className="pill-dot" style={{ background: 'white' }}></span>
+                          <span className="pill-name" style={{ color: 'white' }}>{ev.title}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
