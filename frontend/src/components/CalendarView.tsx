@@ -6,7 +6,7 @@ interface CalendarViewProps {
   birthdays: Birthday[];
   events: EventRecord[];
   onEditBirthday: (bday: Birthday) => void;
-  onEditEvent: (ev: EventRecord) => void;
+  onEditEvent: (ev?: EventRecord) => void;
 }
 
 const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -111,18 +111,22 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
 
   return (
     <div className="calendar-view full-page-calendar card">
-      <div className="calendar-header" style={{ flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={prevMonth} className="btn-icon"><ChevronLeft size={20}/></button>
-          <h3 style={{ margin: 0, width: '220px', textAlign: 'center' }}>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
-          <button onClick={nextMonth} className="btn-icon"><ChevronRight size={20}/></button>
+      <div className="calendar-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
+        
+        {/* 1. Navegación de Meses (Ancho Fijo estricto para no saltar) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '260px' }}>
+          <button onClick={prevMonth} className="btn-icon" style={{ flexShrink: 0 }}><ChevronLeft size={20}/></button>
+          <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
+          <button onClick={nextMonth} className="btn-icon" style={{ flexShrink: 0 }}><ChevronRight size={20}/></button>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* 2. Filtros Rápidos (Mes y Año) */}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <select 
             value={currentDate.getMonth()} 
             onChange={(e) => setCurrentDate(new Date(currentDate.getFullYear(), parseInt(e.target.value), 1))}
             className="filter-select"
+            style={{ width: '130px' }}
           >
             {MONTH_NAMES.map((m, i) => <option key={i} value={i}>{m}</option>)}
           </select>
@@ -131,25 +135,47 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
             value={currentDate.getFullYear()} 
             onChange={(e) => setCurrentDate(new Date(parseInt(e.target.value), currentDate.getMonth(), 1))}
             className="filter-number"
-            style={{ width: '85px' }}
+            style={{ width: '80px' }}
           />
         </div>
         
-        <div className="search-box" style={{ position: 'relative', minWidth: '200px', flex: '1 1 auto' }}>
-          <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input 
-            type="text" 
-            className="input-field" 
-            placeholder="Buscar persona o evento..." 
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            style={{ paddingLeft: '2.5rem', width: '100%' }}
-          />
-        </div>
+        {/* 3. Acciones, Buscador y Botón de Evento */}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: '1 1 auto', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <div className="search-box" style={{ position: 'relative', width: '220px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              placeholder="Buscar..." 
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              style={{ 
+                padding: '0.6rem 1rem 0.6rem 2.5rem', 
+                width: '100%', 
+                background: 'rgba(0,0,0,0.3)', 
+                border: '1px solid var(--glass-border)', 
+                color: 'var(--text-main)', 
+                borderRadius: '8px',
+                fontFamily: 'Outfit, sans-serif',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
+            />
+          </div>
 
-        <div className="toggle-view-container">
-          <button className={`toggle-view-btn ${calendarMode === 'month' ? 'active' : ''}`} onClick={() => setCalendarMode('month')}>Mes</button>
-          <button className={`toggle-view-btn ${calendarMode === 'year' ? 'active' : ''}`} onClick={() => setCalendarMode('year')}>Año</button>
+          <div className="toggle-view-container">
+            <button className={`toggle-view-btn ${calendarMode === 'month' ? 'active' : ''}`} onClick={() => setCalendarMode('month')}>Mes</button>
+            <button className={`toggle-view-btn ${calendarMode === 'year' ? 'active' : ''}`} onClick={() => setCalendarMode('year')}>Año</button>
+          </div>
+          
+          <button 
+            onClick={() => onEditEvent()} 
+            className="btn-primary" 
+            style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+            title="Agregar Nuevo Evento"
+          >
+            + Evento
+          </button>
         </div>
       </div>
       

@@ -91,8 +91,9 @@ function App() {
     setIsEventModalOpen(true);
   };
 
-  const openEditEventModal = (ev: EventRecord) => {
-    setEditingEvent(ev);
+  const openEditEventModal = (ev?: EventRecord) => {
+    if (ev) setEditingEvent(ev);
+    else setEditingEvent(null);
     setIsEventModalOpen(true);
   };
 
