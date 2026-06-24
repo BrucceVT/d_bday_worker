@@ -170,8 +170,8 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
           
           <button 
             onClick={() => onEditEvent()} 
-            className="btn-primary" 
-            style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+            className="btn btn-primary" 
+            style={{ width: 'auto', padding: '0.6rem 1.2rem', gap: '0.4rem' }}
             title="Agregar Nuevo Evento"
           >
             + Evento

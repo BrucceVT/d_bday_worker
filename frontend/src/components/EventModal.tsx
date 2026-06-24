@@ -223,11 +223,11 @@ export function EventModal({ event, onSave, onClose, isLoading }: EventModalProp
             )}
           </div>
 
-          <div className="modal-footer" style={{ marginTop: '2rem' }}>
-            <button type="button" onClick={onClose} className="btn" style={{ background: 'rgba(255,255,255,0.1)' }}>
+          <div className="modal-footer" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+            <button type="button" onClick={onClose} className="btn" style={{ background: 'rgba(255,255,255,0.1)', flex: 1 }}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={isLoading}>
+            <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ flex: 1 }}>
               {isLoading ? 'Guardando...' : 'Guardar Evento'}
             </button>
           </div>
