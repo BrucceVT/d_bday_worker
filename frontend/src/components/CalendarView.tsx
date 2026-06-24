@@ -114,7 +114,7 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
       <div className="calendar-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
         
         {/* 1. Navegación de Meses (Ancho Fijo estricto para no saltar) */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '260px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '320px' }}>
           <button onClick={prevMonth} className="btn-icon" style={{ flexShrink: 0 }}><ChevronLeft size={20}/></button>
           <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
           <button onClick={nextMonth} className="btn-icon" style={{ flexShrink: 0 }}><ChevronRight size={20}/></button>

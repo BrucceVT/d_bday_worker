@@ -875,3 +875,6 @@ textarea.form-control {
   color: white;
 }
 
+
+button { user-select: none; }
+
