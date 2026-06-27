@@ -1,0 +1,26 @@
+# Reglas del Proyecto (CelebraBot)
+
+Estas reglas están diseñadas para que cualquier IA asistente (Cursor, Windsurf, Cline) mantenga la estructura y el estilo del proyecto intactos.
+
+## Identidad Visual y UI
+1. **Glassmorphism**: Todos los componentes principales deben tener un estilo de cristal (fondos semi-transparentes con `rgba()`, bordes blancos tenues `rgba(255,255,255, 0.1)`, `backdrop-filter: blur(10px)`).
+2. **Paleta de Colores**:
+   - Primary: `#8b5cf6` (Purple)
+   - Secondary: `#ec4899` (Pink)
+   - Background: Dark Gradient (`#0f172a` a `#1e1b4b`)
+3. NO introducir Tailwind CSS ni otras librerías. Todo se maneja con CSS puro (vainilla) en `index.css`.
+4. Los íconos deben importarse exclusivamente de `lucide-react`.
+
+## Estandarización de Código (React)
+1. Escribir componentes funcionales tipados con TypeScript.
+2. Evitar el estado global complejo (Redux/Zustand) a menos que sea estrictamente necesario. Manejar el estado a nivel de `App.tsx` y pasarlo por props.
+3. El frontend simula paginación local / infinite scroll debido al bajo peso del JSON que llega desde D1. ¡NO implementar paginación en SQL para los endpoints principales (`/birthdays` o `/schedule`) para no romper la carga inicial del Calendario!
+
+## Reglas Backend y Base de Datos (Worker)
+1. **Endpoint de Eventos**: NUNCA usar la ruta `/api/events`. Utilizar SIEMPRE `/api/schedule` para evitar bloqueos por AdBlockers.
+2. **Cloudflare Cron**: El disparador de eventos (`scheduled`) está configurado para correr **cada hora**. Evitar usar temporizadores de 15 minutos en este proyecto particular para cuidar los límites gratuitos de Cloudflare entre los múltiples proyectos del usuario.
+
+## Comandos Útiles
+- Iniciar UI: `cd frontend && npm run dev`
+- Compilar UI: `cd frontend && npm run build`
+- Desplegar Backend: `cd worker && npx wrangler deploy`
