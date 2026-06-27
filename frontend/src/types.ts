@@ -5,6 +5,7 @@ export interface Birthday {
   birth_date: string; // Format: "MM-DD"
   image_url: string | null;
   custom_message: string | null;
+  birth_year?: number | null;
 }
 
 export type EventType = 'holiday_global' | 'holiday_local' | 'private_event';

@@ -81,7 +81,10 @@ export function ListView({ birthdays, onEditBirthday, onDeleteBirthday }: ListVi
                     <div className="bday-avatar">{bday.name.charAt(0).toUpperCase()}</div>
                   )}
                   <div className="bday-details">
-                    <h3>{bday.nickname ? `${bday.name} (${bday.nickname})` : bday.name}</h3>
+                    <h3>
+                      {bday.nickname ? `${bday.name} (${bday.nickname})` : bday.name}
+                      {bday.birth_year ? ` • ${new Date().getFullYear() - bday.birth_year} años` : ''}
+                    </h3>
                     <p><Calendar size={14} /> {formatDate(bday.birth_date)}</p>
                     {bday.custom_message && (
                       <p className="msg-preview">"{bday.custom_message.substring(0, 40)}{bday.custom_message.length > 40 ? '...' : ''}"</p>

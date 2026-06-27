@@ -28,6 +28,7 @@ export function BirthdayModal({ birthday, onClose, onSave }: BirthdayModalProps)
   const [nickname, setNickname] = useState(birthday?.nickname || '');
   const [month, setMonth] = useState(() => birthday?.birth_date.split('-')[0] || '01');
   const [day, setDay] = useState(() => birthday?.birth_date.split('-')[1] || '01');
+  const [birthYear, setBirthYear] = useState(birthday?.birth_year?.toString() || '');
   const [imageUrl, setImageUrl] = useState(birthday?.image_url || '');
   const [customMessage, setCustomMessage] = useState(birthday?.custom_message || '');
 
@@ -54,6 +55,7 @@ export function BirthdayModal({ birthday, onClose, onSave }: BirthdayModalProps)
       name,
       nickname: nickname || null,
       birth_date: `${month}-${day}`,
+      birth_year: birthYear ? parseInt(birthYear, 10) : null,
       image_url: imageUrl || null,
       custom_message: customMessage || null
     });
@@ -110,11 +112,24 @@ export function BirthdayModal({ birthday, onClose, onSave }: BirthdayModalProps)
                 placeholder="Día"
               />
               <span className="date-separator">de</span>
-              <select className="form-control date-select" value={month} onChange={e => setMonth(e.target.value)}>
+              <select 
+                className="form-control date-select"
+                value={month} 
+                onChange={e => setMonth(e.target.value)}
+              >
                 {MONTHS.map(m => (
                   <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
               </select>
+              <input 
+                type="number" 
+                className="form-control date-select" 
+                placeholder="Año (Opcional)"
+                value={birthYear}
+                onChange={e => setBirthYear(e.target.value)}
+                min="1900"
+                max={new Date().getFullYear()}
+              />
             </div>
           </div>
 

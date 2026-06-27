@@ -271,7 +271,10 @@ export function CalendarView({ birthdays, events, onEditBirthday, onEditEvent }:
                         style={bday.isHighlighted ? { transform: 'scale(1.05)', boxShadow: '0 0 10px var(--primary)', border: '2px solid var(--primary)', zIndex: 10 } : {}}
                       >
                         <span className="pill-dot"></span>
-                        <span className="pill-name">{bday.nickname || bday.name.split(' ')[0]}</span>
+                        <span className="pill-name">
+                          {bday.nickname || bday.name.split(' ')[0]}
+                          {bday.birth_year ? ` (${new Date().getFullYear() - bday.birth_year})` : ''}
+                        </span>
                       </div>
                     ))}
 
